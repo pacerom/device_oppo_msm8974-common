@@ -29,7 +29,6 @@ PRODUCT_PACKAGES += \
 
 # Ramdisk
 PRODUCT_PACKAGES += \
-    init.cne.rc \
     init.qcom-common.rc \
     init.recovery.qcom.rc \
     ueventd.qcom.rc
@@ -38,7 +37,6 @@ PRODUCT_PACKAGES += \
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/audio/audio_effects.conf:system/vendor/etc/audio_effects.conf \
     $(LOCAL_PATH)/audio/audio_policy.conf:system/etc/audio_policy.conf \
-    $(LOCAL_PATH)/audio/mixer_paths.xml:system/etc/mixer_paths.xml \
     $(LOCAL_PATH)/audio/audio_platform_info.xml:system/etc/audio_platform_info.xml \
     $(LOCAL_PATH)/audio/acdb/MTP_Bluetooth_cal.acdb:system/etc/acdbdata/MTP/MTP_Bluetooth_cal.acdb \
     $(LOCAL_PATH)/audio/acdb/MTP_General_cal.acdb:system/etc/acdbdata/MTP/MTP_General_cal.acdb \
@@ -71,11 +69,13 @@ PRODUCT_PROPERTY_OVERRIDES += \
     av.offload.enable=true \
     av.streaming.offload.enable=true \
     use.voice.path.for.pcm.voip=true \
-    audio.offload.gapless.enabled=false \
+    audio.offload.multiple.enabled=true \
+    audio.offload.gapless.enabled=true \
     qcom.hw.aac.encoder=true \
     tunnel.audio.encode=true \
     media.aac_51_output_enabled=true \
-    audio.offload.pcm.enable=true
+    audio.offload.pcm.enable=true \
+    audio.offload.24bit.enable=1
 
 # Charger
 PRODUCT_PACKAGES += \
@@ -167,7 +167,7 @@ PRODUCT_PACKAGES += \
 
 # Thermal config
 PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/configs/thermal-engine-8974.conf:system/etc/thermal-engine-8974.conf
+    $(LOCAL_PATH)/configs/thermal-engine.conf:system/etc/thermal-engine.conf
 
 # Torch
 PRODUCT_PACKAGES += \
@@ -201,23 +201,31 @@ PRODUCT_PACKAGES += \
     libnl_2 \
     libbson
 
-
-# proprietary wifi display, if available
-ifneq ($(QCPATH),)
-PRODUCT_BOOT_JARS += WfdCommon
-endif
+# ANT+
+PRODUCT_PACKAGES += \
+    libantradio \
+    AntHalService
 
 # Set default USB interface
 PRODUCT_DEFAULT_PROPERTY_OVERRIDES += \
     persist.sys.usb.config=mtp
 
+ifneq ($(QCPATH),)
+# proprietary wifi display, if available
+PRODUCT_BOOT_JARS += WfdCommon
+
 # Connectivity Engine support
+ifeq ($(BOARD_USES_QCNE),true)
 PRODUCT_PACKAGES += \
     libcnefeatureconfig \
-    services-ext
+    services-ext \
+    init.cne.rc
 
 PRODUCT_PROPERTY_OVERRIDES +=
     persist.cne.feature=1
+
+endif
+endif
 
 # Enable Bluetooth HFP service
 PRODUCT_PROPERTY_OVERRIDES +=
@@ -237,7 +245,8 @@ PRODUCT_PROPERTY_OVERRIDES += \
     telephony.lteOnGsmDevice=1 \
     wifi.interface=wlan0 \
     wifi.supplicant_scan_interval=15 \
-    ro.qualcomm.perf.cores_online=2
+    ro.qualcomm.perf.cores_online=2 \
+    ro.telephony.call_ring.multiple=0
 
 # Permissions
 PRODUCT_COPY_FILES += \
